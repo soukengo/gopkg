@@ -23,7 +23,17 @@ func NewClient(opts ...Option) *Client {
 }
 
 func newRestyClient(opts *options) *resty.Client {
-	return resty.New().SetTimeout(opts.timeout)
+	cli := resty.New().SetTimeout(opts.timeout)
+	if len(opts.baseUrl) > 0 {
+		cli.SetBaseURL(opts.baseUrl)
+	}
+	if opts.basicAuth != nil {
+		cli.SetBasicAuth(opts.basicAuth.username, opts.basicAuth.password)
+	}
+	if len(opts.proxyURL) > 0 {
+		cli.SetProxy(opts.proxyURL)
+	}
+	return cli
 }
 
 // Post send POST request
