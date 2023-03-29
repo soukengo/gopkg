@@ -1,3 +1,3 @@
 package gopkg
 
-const Version = "v0.1.6"
+const Version = "v0.1.7"

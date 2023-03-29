@@ -5,8 +5,8 @@ import (
 	rds "github.com/go-redis/redis/v8"
 	"github.com/soukengo/gopkg/component/cache"
 	"github.com/soukengo/gopkg/component/database/redis"
+	"github.com/soukengo/gopkg/component/paginate"
 	"github.com/soukengo/gopkg/errors"
-	"rockimserver/apis/rockim/shared"
 	"strconv"
 )
 
@@ -45,13 +45,13 @@ func (c *sortedSetCache[T]) AddSlice(ctx context.Context, parts cache.KeyParts, 
 	return
 }
 
-func (c *sortedSetCache[T]) Paginate(ctx context.Context, parts cache.KeyParts, paginate *shared.Paginating) (ret []*T, paginated *shared.Paginated, err error) {
+func (c *sortedSetCache[T]) Paginate(ctx context.Context, parts cache.KeyParts, p *paginate.Paginating) (ret []*T, paginated *paginate.Paginated, err error) {
 	key := c.key(parts)
 	total, err := c.cli.ZCard(ctx, key)
 	if err != nil {
 		return
 	}
-	paginated = &shared.Paginated{Total: total}
+	paginated = &paginate.Paginated{Total: total}
 	if total == 0 {
 		var exists bool
 		exists, err = c.Exists(ctx, parts)
@@ -64,7 +64,7 @@ func (c *sortedSetCache[T]) Paginate(ctx context.Context, parts cache.KeyParts, 
 		}
 		return
 	}
-	values, err := c.cli.ZRangeByScore(ctx, key, &rds.ZRangeBy{Count: int64(paginate.PageSize), Offset: paginate.Offset()})
+	values, err := c.cli.ZRangeByScore(ctx, key, &rds.ZRangeBy{Count: int64(p.PageSize), Offset: p.Offset()})
 	if err != nil {
 		return
 	}

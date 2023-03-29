@@ -1,6 +1,7 @@
 package log
 
 import (
+	"github.com/go-kratos/kratos/contrib/log/zap/v2"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/soukengo/gopkg/util/file"
 	"path/filepath"

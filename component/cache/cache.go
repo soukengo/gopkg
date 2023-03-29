@@ -2,7 +2,7 @@ package cache
 
 import (
 	"context"
-	"rockimserver/apis/rockim/shared"
+	"github.com/soukengo/gopkg/component/paginate"
 )
 
 type Cache[T any] interface {
@@ -42,7 +42,7 @@ type SortedSetCache[T any] interface {
 	Cache[T]
 	Add(ctx context.Context, parts KeyParts, member *SortedMember[T]) error
 	AddSlice(ctx context.Context, parts KeyParts, values []*SortedMember[T]) error
-	Paginate(ctx context.Context, parts KeyParts, paginate *shared.Paginating) ([]*T, *shared.Paginated, error)
+	Paginate(ctx context.Context, parts KeyParts, p *paginate.Paginating) ([]*T, *paginate.Paginated, error)
 	// Tail 按分数排序 查看最后的数据
 	Tail(ctx context.Context, parts KeyParts, size int64) ([]*T, error)
 	DeleteMember(ctx context.Context, parts KeyParts, value *T) error

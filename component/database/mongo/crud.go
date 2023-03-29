@@ -2,10 +2,10 @@ package mongo
 
 import (
 	"context"
+	"github.com/soukengo/gopkg/component/paginate"
 	"github.com/soukengo/gopkg/errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	mgoopts "go.mongodb.org/mongo-driver/mongo/options"
-	"rockimserver/apis/rockim/shared"
 )
 
 var (
@@ -29,9 +29,9 @@ func (c *Client) FindList(ctx context.Context, collection string, filter any, re
 	return cursor.All(ctx, result)
 }
 
-func (c *Client) Paginate(ctx context.Context, collection string, query interface{}, paginate *shared.Paginating, opts ...*mgoopts.FindOptions) (cursor *mongo.Cursor, p *shared.Paginated, err error) {
-	offset := paginate.Offset()
-	limit := paginate.Limit()
+func (c *Client) Paginate(ctx context.Context, collection string, query interface{}, p *paginate.Paginating, opts ...*mgoopts.FindOptions) (cursor *mongo.Cursor, paginated *paginate.Paginated, err error) {
+	offset := p.Offset()
+	limit := p.Limit()
 	opts = append(opts, &mgoopts.FindOptions{
 		Limit: &limit,
 		Skip:  &offset,
@@ -41,7 +41,7 @@ func (c *Client) Paginate(ctx context.Context, collection string, query interfac
 	if err != nil {
 		return nil, nil, err
 	}
-	p = &shared.Paginated{Total: total}
+	paginated = &paginate.Paginated{Total: total}
 	cursor, err = co.Find(ctx, query, opts...)
 	return
 }

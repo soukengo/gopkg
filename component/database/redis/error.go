@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	xerrors "errors"
+	"github.com/go-redis/redis/v8"
 	"github.com/soukengo/gopkg/errors"
 )
 
