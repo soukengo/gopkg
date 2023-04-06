@@ -1,8 +1,8 @@
 package kafka
 
 import (
+	"context"
 	"github.com/Shopify/sarama"
-	cluster "github.com/bsm/sarama-cluster"
 	"github.com/soukengo/gopkg/component/mq"
 	"github.com/soukengo/gopkg/log"
 	"github.com/soukengo/gopkg/util/runtimes"
@@ -16,94 +16,124 @@ const (
 
 type Consumer struct {
 	logger   log.Logger
-	consumer *cluster.Consumer
+	consumer sarama.ConsumerGroup
+	session  sarama.ConsumerGroupSession
 	config   *ConsumerConfig
 	handler  mq.Handler
 	queue    chan *sarama.ConsumerMessage // 数据队列
 	consumed sync.Once
 	closed   sync.Once
-	done     chan struct{}
+	ctx      context.Context
+	cancel   context.CancelFunc
 }
 
 func NewConsumer(config *ConsumerConfig, handler mq.Handler, logger log.Logger) (*Consumer, error) {
-	kafkaConfig := cluster.NewConfig()
+	kafkaConfig := sarama.NewConfig()
 	kafkaConfig.Consumer.Return.Errors = true
-	kafkaConfig.Group.Return.Notifications = true
-	topics := make([]string, len(config.Topics))
-	for i := 0; i < len(config.Topics); i++ {
-		topics[i] = config.Kafka.TopicPrefix + config.Topics[i]
-	}
 	if config.Workers <= 0 {
 		config.Workers = defaultWorkers
 	}
-	consumer, err := cluster.NewConsumer(config.Kafka.Brokers, config.Group, topics, kafkaConfig)
+	consumer, err := sarama.NewConsumerGroup(config.Kafka.Brokers, config.Group, kafkaConfig)
 	if err != nil {
 		return nil, err
 	}
+	ctx, cancel := context.WithCancel(context.Background())
 	c := &Consumer{
 		logger:   logger,
 		config:   config,
 		consumer: consumer,
 		handler:  handler,
 		queue:    make(chan *sarama.ConsumerMessage, config.Workers),
-		done:     make(chan struct{}),
+		ctx:      ctx,
+		cancel:   cancel,
 	}
 	return c, nil
 }
 
 // Start 消费
-func (s *Consumer) Start() (err error) {
-	s.consumed.Do(func() {
+func (c *Consumer) Start() (err error) {
+	c.consumed.Do(func() {
 		go runtimes.TryCatch(func() {
-			s.receive()
+			c.receive()
 		})
 		go runtimes.TryCatch(func() {
-			s.dispatch()
+			c.dispatch()
 		})
 	})
 	return
 }
 
 // dispatch 分发
-func (s *Consumer) dispatch() {
+func (c *Consumer) dispatch() {
 	for {
 		select {
-		case <-s.done:
+		case <-c.ctx.Done():
 			return
-		case msg := <-s.queue:
+		case msg := <-c.queue:
 			topic := msg.Topic
 			// 移除配置的topic前缀
-			topic = strings.TrimPrefix(topic, s.config.Kafka.TopicPrefix)
-			err := s.handler.OnReceived(topic, msg.Value)
+			topic = strings.TrimPrefix(topic, c.config.Kafka.TopicPrefix)
+			err := c.handler.OnReceived(topic, msg.Value)
 			if err != nil {
 				log.Errorf("handler.OnReceived error: %v", err)
 				continue
 			}
-			s.consumer.MarkOffset(msg, "")
+			if c.session != nil {
+				c.session.MarkMessage(msg, "")
+			}
 		}
 	}
 }
 
 // receive 接收
-func (s *Consumer) receive() {
+func (c *Consumer) receive() {
+	config := c.config
+	topics := make([]string, len(config.Topics))
+	for i := 0; i < len(config.Topics); i++ {
+		topics[i] = config.Kafka.TopicPrefix + config.Topics[i]
+	}
 	for {
-		select {
-		case <-s.done:
+		if err := c.consumer.Consume(c.ctx, topics, c); err != nil {
+			log.Errorf("Error from consumer: %v", err)
+		}
+		// check if context was cancelled, signaling that the consumer should stop
+		if c.ctx.Err() != nil {
 			return
-		case err := <-s.consumer.Errors():
-			s.logger.Helper().Errorf("consumer error(%v)", err)
-		case n := <-s.consumer.Notifications():
-			s.logger.Helper().Infof("consumer rebalanced(%v)", n)
-		case msg := <-s.consumer.Messages():
-			s.queue <- msg
 		}
 	}
 }
 
-func (s *Consumer) Close() error {
-	s.closed.Do(func() {
-		close(s.done)
-		close(s.queue)
+func (c *Consumer) Close() error {
+	c.closed.Do(func() {
+		c.cancel()
+		close(c.queue)
 	})
 	return nil
+}
+
+// Setup is run at the beginning of a new session, before ConsumeClaim
+func (c *Consumer) Setup(sarama.ConsumerGroupSession) error {
+	return nil
+}
+
+// Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
+func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
+	return nil
+}
+
+// ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
+func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+	c.session = session
+	for {
+		select {
+		case <-c.ctx.Done():
+			return nil
+		case err := <-c.consumer.Errors():
+			c.logger.Helper().Errorf("consumer error(%v)", err)
+		case message := <-claim.Messages():
+			c.queue <- message
+		case <-session.Context().Done():
+			return nil
+		}
+	}
 }

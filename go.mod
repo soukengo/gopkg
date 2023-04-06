@@ -4,7 +4,6 @@ go 1.20
 
 require (
 	github.com/Shopify/sarama v1.38.1
-	github.com/bsm/sarama-cluster v2.1.15+incompatible
 	github.com/go-kratos/kratos/contrib/log/zap/v2 v2.0.0-20230326145430-f03f5f89881f
 	github.com/go-kratos/kratos/contrib/registry/etcd/v2 v2.0.0-20230326145430-f03f5f89881f
 	github.com/go-kratos/kratos/contrib/registry/nacos/v2 v2.0.0-20230326145430-f03f5f89881f
