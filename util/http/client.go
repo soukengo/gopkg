@@ -70,6 +70,16 @@ func (c *Client) PostJSON(ctx context.Context, addr string, json string, headers
 	return
 }
 
+// Get send Get request
+func (c *Client) Get(ctx context.Context, addr string, params map[string]string, headers map[string]string) (out *Response, err error) {
+	resp, err := c.newRequest(ctx).SetHeaders(headers).SetQueryParams(params).Get(addr)
+	if err != nil {
+		return
+	}
+	out = newResponse(resp.Body(), resp.RawResponse)
+	return
+}
+
 func (c *Client) newRequest(ctx context.Context) *resty.Request {
 	return c.cli.NewRequest().SetContext(ctx)
 }
