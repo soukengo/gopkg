@@ -2,6 +2,7 @@ package gnet
 
 import (
 	"github.com/google/uuid"
+	"github.com/panjf2000/gnet/v2"
 	"github.com/soukengo/gopkg/component/server/socket/network"
 	"github.com/soukengo/gopkg/component/server/socket/network/tcp"
 	"github.com/soukengo/gopkg/component/server/socket/packet"

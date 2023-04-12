@@ -4,6 +4,7 @@ import (
 	"bufio"
 	log "github.com/golang/glog"
 	"github.com/google/uuid"
+	"github.com/panjf2000/gnet/v2"
 	"github.com/soukengo/gopkg/component/server/socket/packet"
 	"go.uber.org/atomic"
 	"io"
