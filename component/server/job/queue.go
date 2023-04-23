@@ -3,27 +3,38 @@ package job
 import (
 	"context"
 	"github.com/soukengo/gopkg/component/queue"
+	"github.com/soukengo/gopkg/log"
 )
 
-type queueServer struct {
-	queue queue.Queue
+type queueConsumerServer struct {
+	logger   log.Logger
+	consumer queue.Consumer
 }
 
-func NewQueueServer(queue queue.Queue) Server {
-	return &queueServer{queue: queue}
+func NewQueueServer(cfg *queue.Config, logger log.Logger) (Server, error) {
+	consumer, err := queue.NewConsumer(cfg, logger)
+	if err != nil {
+		return nil, err
+	}
+	return &queueConsumerServer{consumer: consumer, logger: logger}, nil
 }
 
-func (s *queueServer) Start(ctx context.Context) error {
-	return s.queue.Start()
+func (s *queueConsumerServer) Start(ctx context.Context) (err error) {
+	err = s.consumer.Start()
+	if err != nil {
+		return
+	}
+	log.WithContext(ctx).Infof("queue server started")
+	return
 }
 
-func (s *queueServer) Stop(ctx context.Context) error {
-	return s.queue.Stop()
+func (s *queueConsumerServer) Stop(ctx context.Context) error {
+	return s.consumer.Stop()
 }
 
-func (s *queueServer) Register(topic string, h Handler) {
-	s.queue.Subscribe(queue.Topic(topic), func(topic queue.Topic, value string) {
+func (s *queueConsumerServer) Register(topic string, h Handler) {
+	s.consumer.Subscribe(queue.Topic(topic), func(topic queue.Topic, value queue.Value) error {
 		ctx := context.Background()
-		_ = h(ctx, string(topic), []byte(value))
+		return h(ctx, string(topic), value)
 	})
 }

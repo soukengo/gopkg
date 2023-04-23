@@ -3,7 +3,7 @@ package lock
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/soukengo/gopkg/component/database/redis"
+	"github.com/soukengo/gopkg/infra/storage/redis"
 	"github.com/soukengo/gopkg/log"
 	"time"
 )

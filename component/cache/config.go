@@ -1,23 +1,21 @@
 package cache
 
 import (
+	"github.com/soukengo/gopkg/infra/storage"
+	"github.com/soukengo/gopkg/infra/storage/redis"
 	"sync"
 )
 
 type Config struct {
 	Default    Category
 	Categories []*Category
-	cateMap    map[Key]*Category
-	lock       sync.RWMutex
+	Redis      *redis.Reference
+
+	cateMap map[Key]*Category
+	lock    sync.RWMutex
 }
 
-func (c *Config) Parse() (err error) {
-	if c.Default.Expire == 0 {
-		c.Default.Expire = defaultExpire
-	}
-	if c.Default.EmptyExpire == 0 {
-		c.Default.EmptyExpire = emptyExpire
-	}
+func (c *Config) Parse(configs *storage.Config) {
 	c.cateMap = make(map[Key]*Category)
 	if c.Categories == nil {
 		c.Categories = make([]*Category, 0)
@@ -27,6 +25,8 @@ func (c *Config) Parse() (err error) {
 		c.cateMap[category.Key] = c.Default.CopyFrom(category)
 	}
 	c.lock.Unlock()
+	// 设置redis参数
+	c.Redis.Parse(configs.Redis)
 	return
 }
 

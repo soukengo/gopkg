@@ -1,11 +1,16 @@
 package database
 
 import (
-	"github.com/soukengo/gopkg/component/database/mongo"
-	"github.com/soukengo/gopkg/component/database/redis"
+	"github.com/soukengo/gopkg/infra/storage"
+	"github.com/soukengo/gopkg/infra/storage/mongo"
 )
 
 type Config struct {
-	Mongodb *mongo.Config
-	Redis   *redis.Config
+	Mongodb *mongo.Reference
+}
+
+func (c Config) Parse(configs *storage.Config) {
+	if c.Mongodb != nil {
+		c.Mongodb.Parse(configs.Mongodb)
+	}
 }

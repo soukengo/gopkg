@@ -1,6 +1,9 @@
 package job
 
-import "context"
+import (
+	"context"
+	"github.com/soukengo/gopkg/log"
+)
 
 type Server interface {
 	Start(context.Context) error
@@ -9,3 +12,7 @@ type Server interface {
 }
 
 type Handler func(ctx context.Context, topic string, data []byte) error
+
+func NewServer(cfg *Config, logger log.Logger) (Server, error) {
+	return NewQueueServer(cfg.Queue, logger)
+}
