@@ -1,13 +1,5 @@
 package log
 
-var (
-	Default = &Config{
-		LoggerConfig: LoggerConfig{
-			Level: "info",
-		},
-	}
-)
-
 type Config struct {
 	LoggerConfig `mapstructure:",squash"`
 	Loggers      []LoggerConfig
@@ -25,4 +17,12 @@ type AppenderConfig struct {
 	FileName      string
 	Pattern       string
 	RotationCount uint
+}
+
+func Default() *Config {
+	return &Config{
+		LoggerConfig: LoggerConfig{
+			Level: "info",
+		},
+	}
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 )
 
-func GetLogger() Logger {
+func Global() Logger {
 	return global
 }
 

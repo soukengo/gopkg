@@ -3,6 +3,7 @@ package socket
 import (
 	"github.com/google/uuid"
 	"github.com/soukengo/gopkg/component/server/socket/packet"
+	"github.com/soukengo/gopkg/util/runtimes"
 	"sync"
 	"sync/atomic"
 )
@@ -13,8 +14,8 @@ type Bucket struct {
 	chs           map[string]Channel
 	cLock         sync.RWMutex
 	gLock         sync.RWMutex
-	groups        map[string]Group
-	routines      []chan *PushGroupPacket
+	rooms         map[string]Room
+	routines      []chan *PushRoomPacket
 	routineAmount uint64
 	routineSize   int
 
@@ -28,11 +29,13 @@ func newBucket(channelSize uint32, routineAmount uint64, routineSize int) *Bucke
 		routineAmount: routineAmount,
 		routineSize:   routineSize,
 	}
-	b.routines = make([]chan *PushGroupPacket, routineAmount)
+	b.routines = make([]chan *PushRoomPacket, routineAmount)
 	for i := uint64(0); i < routineAmount; i++ {
-		c := make(chan *PushGroupPacket, routineSize)
+		c := make(chan *PushRoomPacket, routineSize)
 		b.routines[i] = c
-		go b.groupproc(c)
+		runtimes.Async(func() {
+			b.roomproc(c)
+		})
 	}
 	return b
 }
@@ -45,9 +48,9 @@ func (b *Bucket) PutChannel(ch Channel) {
 func (b *Bucket) DelChannel(ch Channel) {
 	b.cLock.Lock()
 	delete(b.chs, ch.Id())
-	groups := ch.Groups()
-	for _, groupId := range groups {
-		b.QuitGroup(groupId, ch)
+	rooms := ch.Rooms()
+	for _, roomId := range rooms {
+		b.QuitRoom(roomId, ch)
 	}
 	b.cLock.Unlock()
 }
@@ -59,30 +62,30 @@ func (b *Bucket) Channel(channelId string) (ch Channel, ok bool) {
 	return
 }
 
-func (b *Bucket) Group(groupId string) (group Group, ok bool) {
+func (b *Bucket) Room(roomId string) (room Room, ok bool) {
 	b.gLock.RLock()
-	group, ok = b.groups[groupId]
+	room, ok = b.rooms[roomId]
 	b.gLock.RUnlock()
 	return
 }
-func (b *Bucket) DelGroup(group Group) {
+func (b *Bucket) DelRoom(room Room) {
 	b.gLock.Lock()
-	delete(b.groups, group.ID())
+	delete(b.rooms, room.ID())
 	b.gLock.Unlock()
-	group.Close()
+	room.Close()
 }
 
-func (b *Bucket) JoinGroup(groupId string, ch Channel) (err error) {
+func (b *Bucket) JoinRoom(roomId string, ch Channel) (err error) {
 	var (
-		g  Group
+		g  Room
 		ok bool
 	)
 	b.gLock.Lock()
-	if g, ok = b.groups[groupId]; !ok {
-		g = NewGroup(groupId)
-		b.groups[groupId] = g
+	if g, ok = b.rooms[roomId]; !ok {
+		g = NewRoom(roomId)
+		b.rooms[roomId] = g
 	}
-	ch.AddGroup(groupId)
+	ch.AddRoom(roomId)
 	b.gLock.Unlock()
 	if g != nil {
 		err = g.Put(ch)
@@ -90,30 +93,30 @@ func (b *Bucket) JoinGroup(groupId string, ch Channel) (err error) {
 	return
 }
 
-func (b *Bucket) QuitGroup(groupId string, ch Channel) {
+func (b *Bucket) QuitRoom(roomId string, ch Channel) {
 	b.gLock.RLock()
-	g, ok := b.groups[groupId]
+	g, ok := b.rooms[roomId]
 	b.gLock.RUnlock()
 	if ok {
 		if g.Del(ch) {
-			b.DelGroup(g)
+			b.DelRoom(g)
 		}
 	}
-	ch.DelGroup(groupId)
+	ch.DelRoom(roomId)
 	return
 }
 
-// PushGroup broadcast a message to specified group
-func (b *Bucket) PushGroup(groupId string, p packet.IPacket) {
+// PushRoom broadcast a message to specified room
+func (b *Bucket) PushRoom(roomId string, p packet.IPacket) {
 	num := atomic.AddUint64(&b.routinesNum, 1) % b.routineAmount
-	b.routines[num] <- &PushGroupPacket{GroupId: groupId, Packet: p}
+	b.routines[num] <- &PushRoomPacket{RoomId: roomId, Packet: p}
 }
 
-// groupproc
-func (b *Bucket) groupproc(c chan *PushGroupPacket) {
+// roomproc
+func (b *Bucket) roomproc(c chan *PushRoomPacket) {
 	for {
 		arg := <-c
-		if item, ok := b.Group(arg.GroupId); ok {
+		if item, ok := b.Room(arg.RoomId); ok {
 			var g = item
 			g.Push(arg.Packet)
 		}

@@ -45,6 +45,34 @@ func (c *sortedSetCache[T]) AddSlice(ctx context.Context, parts core.KeyParts, v
 	return
 }
 
+func (c *sortedSetCache[T]) Scan(ctx context.Context, parts core.KeyParts, cursor uint64, count int64) (ret []*T, retCursor uint64, err error) {
+	values, retCursor, err := c.cli.ZScan(ctx, c.key(parts), cursor, "*", count)
+	if err != nil {
+		return
+	}
+	if retCursor == 0 {
+		var exists bool
+		exists, err = c.Exists(ctx, parts)
+		if err != nil {
+			return
+		}
+		if !exists {
+			err = core.ErrNoCache
+			return
+		}
+	}
+	ret = make([]*T, len(values))
+	for i, v := range values {
+		var item *T
+		item, err = c.decodeStr(v)
+		if err != nil {
+			return
+		}
+		ret[i] = item
+	}
+	return
+}
+
 func (c *sortedSetCache[T]) Paginate(ctx context.Context, parts core.KeyParts, p *paginate.Paginating) (ret []*T, paginated *paginate.Paginated, err error) {
 	key := c.key(parts)
 	total, err := c.cli.ZCard(ctx, key)

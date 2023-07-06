@@ -14,15 +14,15 @@ func (s *server) Channel(channelId string) (Channel, bool) {
 	return s.Bucket(channelId).Channel(channelId)
 }
 
-func (s *server) JoinGroup(groupId string, channel Channel) error {
-	return s.Bucket(groupId).JoinGroup(groupId, channel)
+func (s *server) JoinRoom(roomId string, channel Channel) error {
+	return s.Bucket(roomId).JoinRoom(roomId, channel)
 }
-func (s *server) QuitGroup(groupId string, channel Channel) error {
-	s.Bucket(groupId).QuitGroup(groupId, channel)
+func (s *server) QuitRoom(roomId string, channel Channel) error {
+	s.Bucket(roomId).QuitRoom(roomId, channel)
 	return nil
 }
-func (s *server) PushGroup(groupId string, p packet.IPacket) {
+func (s *server) PushRoom(roomId string, p packet.IPacket) {
 	for _, bucket := range s.buckets {
-		bucket.PushGroup(groupId, p)
+		bucket.PushRoom(roomId, p)
 	}
 }

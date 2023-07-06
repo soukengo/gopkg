@@ -1,5 +1,7 @@
 package errors
 
+import "errors"
+
 // BadRequest new BadRequest error that is mapped to a 400 response.
 func BadRequest(reason, message string) *Error {
 	return New(400, reason, message)
@@ -97,4 +99,8 @@ func ClientClosed(reason, message string) *Error {
 // It supports wrapped errors.
 func IsClientClosed(err error) bool {
 	return Code(err) == 499
+}
+
+func Is(source, target error) bool {
+	return errors.Is(source, target)
 }

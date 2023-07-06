@@ -18,7 +18,7 @@ type channel struct {
 	sendQueue     chan packet.IPacket
 	ctx           context.Context
 	cancel        context.CancelFunc
-	groups        map[string]struct{}
+	rooms         map[string]struct{}
 	glock         sync.RWMutex
 	authenticated int32
 	Attributes
@@ -32,13 +32,11 @@ func newChannel(conn network.Connection, sendQueueSize uint32) Channel {
 		done:       new(sync.Once),
 		sendQueue:  make(chan packet.IPacket, sendQueueSize),
 		conn:       conn,
-		groups:     map[string]struct{}{},
+		rooms:      map[string]struct{}{},
 		Attributes: newAttributes(),
 	}
 	ins.clientIP, _, _ = net.SplitHostPort(conn.RemoteAddr().String())
-	go runtimes.TryCatch(func() {
-		ins.dispatch()
-	})
+	runtimes.Async(ins.dispatch)
 	return ins
 }
 
@@ -60,20 +58,20 @@ func (c *channel) Send(data packet.IPacket) error {
 	return nil
 }
 
-func (c *channel) AddGroup(groupId string) {
+func (c *channel) AddRoom(roomId string) {
 	c.glock.Lock()
-	c.groups[groupId] = struct{}{}
+	c.rooms[roomId] = struct{}{}
 	c.glock.Unlock()
 }
 
-func (c *channel) DelGroup(groupId string) {
+func (c *channel) DelRoom(roomId string) {
 	c.glock.Lock()
-	delete(c.groups, groupId)
+	delete(c.rooms, roomId)
 	c.glock.Unlock()
 }
-func (c *channel) Groups() (ret []string) {
+func (c *channel) Rooms() (ret []string) {
 	c.glock.RLock()
-	for id := range c.groups {
+	for id := range c.rooms {
 		ret = append(ret, id)
 	}
 	c.glock.RUnlock()

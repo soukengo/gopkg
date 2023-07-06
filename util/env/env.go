@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	goBuildFlags = []string{"go_build", "go-build", "___Test", "___Benchmark"}
+	goBuildFlags = []string{"go_build", "go-build", "Test", "___Benchmark", "GoLand/___"}
 )
 
 func RootDir() (string, error) {

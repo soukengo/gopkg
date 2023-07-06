@@ -25,7 +25,7 @@ func NewClient(conf *Config) *Client {
 func NewClientWithOptions(conf *Config, opts ...Option) *Client {
 	c := new(Client)
 	opt := &options{
-		logger: log.GetLogger(),
+		logger: log.Global(),
 	}
 	c.opts = opt.apply(opts...)
 	c.config = conf

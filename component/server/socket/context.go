@@ -7,11 +7,16 @@ import (
 
 type Context struct {
 	ctx context.Context
+	srv Server
 	ch  Channel
 }
 
-func NewContext(ctx context.Context, ch Channel) *Context {
-	return &Context{ctx: ctx, ch: ch}
+func NewContext(ctx context.Context, srv Server, ch Channel) *Context {
+	return &Context{ctx: ctx, srv: srv, ch: ch}
+}
+
+func (c *Context) Server() Server {
+	return c.srv
 }
 
 func (c *Context) Channel() Channel {
@@ -34,10 +39,7 @@ func (c *Context) Value(key any) any {
 	return c.ctx.Value(key)
 }
 
-func FromContext(ctx context.Context) (Channel, bool) {
+func FromContext(ctx context.Context) (*Context, bool) {
 	c, ok := ctx.(*Context)
-	if !ok {
-		return nil, false
-	}
-	return c.ch, true
+	return c, ok
 }

@@ -16,9 +16,9 @@ type Server interface {
 
 type Manager interface {
 	Channel(channelId string) (Channel, bool)
-	JoinGroup(groupId string, channel Channel) error
-	QuitGroup(groupId string, channel Channel) error
-	PushGroup(groupId string, p packet.IPacket)
+	JoinRoom(roomId string, channel Channel) error
+	QuitRoom(roomId string, channel Channel) error
+	PushRoom(roomId string, p packet.IPacket)
 }
 
 type Registry interface {
@@ -37,15 +37,15 @@ type Channel interface {
 	ClientIP() string
 	Send(packet packet.IPacket) error
 	Close() error
-	AddGroup(groupId string)
-	DelGroup(groupId string)
-	Groups() []string
+	AddRoom(roomId string)
+	DelRoom(roomId string)
+	Rooms() []string
 	MarkAuthenticated()
 	Authenticated() bool
 	Attributes
 }
 
-type Group interface {
+type Room interface {
 	ID() string
 	Put(ch Channel) (err error)
 	Del(ch Channel) bool

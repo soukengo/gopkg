@@ -7,10 +7,10 @@ import (
 )
 
 var (
-	ErrGroupDropped = errors.New("group dropped")
+	ErrRoomDropped = errors.New("room dropped")
 )
 
-type group struct {
+type room struct {
 	id       string
 	rLock    sync.RWMutex
 	channels map[string]Channel
@@ -18,8 +18,8 @@ type group struct {
 	online   int32 // dirty read is ok
 }
 
-func NewGroup(id string) Group {
-	r := new(group)
+func NewRoom(id string) Room {
+	r := new(room)
 	r.id = id
 	r.drop = false
 	r.online = 0
@@ -27,10 +27,10 @@ func NewGroup(id string) Group {
 	return r
 }
 
-func (r *group) ID() string {
+func (r *room) ID() string {
 	return r.id
 }
-func (r *group) Put(ch Channel) (err error) {
+func (r *room) Put(ch Channel) (err error) {
 	r.rLock.Lock()
 	if !r.drop {
 		if r.channels[ch.Id()] == nil {
@@ -38,13 +38,13 @@ func (r *group) Put(ch Channel) (err error) {
 			r.online++
 		}
 	} else {
-		err = ErrGroupDropped
+		err = ErrRoomDropped
 	}
 	r.rLock.Unlock()
 	return
 }
 
-func (r *group) Del(ch Channel) bool {
+func (r *room) Del(ch Channel) bool {
 	r.rLock.Lock()
 	delete(r.channels, ch.Id())
 	r.online--
@@ -53,7 +53,7 @@ func (r *group) Del(ch Channel) bool {
 	return r.drop
 }
 
-func (r *group) Push(p packet.IPacket) {
+func (r *room) Push(p packet.IPacket) {
 	r.rLock.RLock()
 	for _, ch := range r.channels {
 		_ = ch.Send(p)
@@ -61,10 +61,10 @@ func (r *group) Push(p packet.IPacket) {
 	r.rLock.RUnlock()
 }
 
-func (r *group) Close() {
+func (r *room) Close() {
 	r.rLock.RLock()
 	for _, ch := range r.channels {
-		ch.DelGroup(r.id)
+		ch.DelRoom(r.id)
 	}
 	r.rLock.RUnlock()
 }

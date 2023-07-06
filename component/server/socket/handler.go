@@ -9,7 +9,7 @@ import (
 func (s *server) OnConnect(conn network.Connection) {
 	ch := newChannel(conn, s.opt.SendQueueSize)
 	s.Bucket(conn.Id()).PutChannel(ch)
-	ctx := NewContext(context.Background(), ch)
+	ctx := NewContext(context.Background(), s, ch)
 	s.handler.OnCreated(ctx)
 }
 
@@ -20,7 +20,7 @@ func (s *server) OnDisConnect(conn network.Connection) {
 		return
 	}
 	s.Bucket(channelId).DelChannel(ch)
-	ctx := NewContext(context.Background(), ch)
+	ctx := NewContext(context.Background(), s, ch)
 	s.handler.OnClosed(ctx)
 }
 
@@ -30,6 +30,6 @@ func (s *server) OnReceived(conn network.Connection, p packet.IPacket) {
 		_ = conn.Close()
 		return
 	}
-	ctx := NewContext(context.Background(), ch)
+	ctx := NewContext(context.Background(), s, ch)
 	s.handler.OnReceived(ctx, p)
 }
