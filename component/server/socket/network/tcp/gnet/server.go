@@ -14,13 +14,13 @@ import (
 type gnetServer struct {
 	id        string
 	cfg       *tcp.Config
-	parser    *packet.Parser
+	parser    packet.IParser
 	handler   network.Handler
 	eng       gnet.Engine
 	startOnce *sync.Once
 }
 
-func NewServer(cfg *tcp.Config, parser *packet.Parser) network.Server {
+func NewServer(cfg *tcp.Config, parser packet.IParser) network.Server {
 	return &gnetServer{
 		id:        uuid.New().String(),
 		parser:    parser,
@@ -64,7 +64,7 @@ func (s *gnetServer) OnBoot(eng gnet.Engine) (action gnet.Action) {
 	go func() {
 		for {
 			time.Sleep(time.Second * 5)
-			log.Infof("connection count: %d", s.eng.CountConnections())
+			//log.Infof("connection count: %d", s.eng.CountConnections())
 		}
 	}()
 	return

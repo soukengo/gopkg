@@ -19,12 +19,12 @@ var (
 type tcpConn struct {
 	id     string
 	core   gnet.Conn
-	parser *packet.Parser
+	parser packet.IParser
 	reader io.Reader
 	closed *atomic.Bool
 }
 
-func newConn(gc gnet.Conn, parser *packet.Parser) *tcpConn {
+func newConn(gc gnet.Conn, parser packet.IParser) *tcpConn {
 	return &tcpConn{
 		id:   uuid.New().String(),
 		core: gc, parser: parser,

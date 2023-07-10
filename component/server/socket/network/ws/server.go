@@ -16,13 +16,13 @@ type wsServer struct {
 	id        string
 	cfg       *Config
 	endpoint  *url.URL
-	parser    *packet.Parser
+	parser    packet.IParser
 	upgrader  *websocket.Upgrader
 	handler   network.Handler
 	startOnce *sync.Once
 }
 
-func NewServer(cfg *Config, parser *packet.Parser) network.Server {
+func NewServer(cfg *Config, parser packet.IParser) network.Server {
 	if len(cfg.Path) == 0 {
 		cfg.Path = "/"
 	}

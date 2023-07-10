@@ -13,14 +13,14 @@ type OnReceived func(p packet.IPacket)
 type wsConn struct {
 	id       string
 	core     *websocket.Conn
-	parser   *packet.Parser
+	parser   packet.IParser
 	msgType  int
 	callback OnReceived
 	once     *sync.Once
 	done     chan struct{} // 关闭标识
 }
 
-func newConn(msgType int, core *websocket.Conn, parser *packet.Parser, callback OnReceived) *wsConn {
+func newConn(msgType int, core *websocket.Conn, parser packet.IParser, callback OnReceived) *wsConn {
 	c := &wsConn{
 		id:       uuid.New().String(),
 		core:     core,

@@ -13,13 +13,13 @@ import (
 type nbioConn struct {
 	id     string
 	core   *nbio.Conn
-	parser *packet.Parser
+	parser packet.IParser
 	buf    *bytes.Buffer
 	reader *bufio.Reader
 	closed int32
 }
 
-func newConn(gc *nbio.Conn, parser *packet.Parser) *nbioConn {
+func newConn(gc *nbio.Conn, parser packet.IParser) *nbioConn {
 	buf := bytes.NewBuffer([]byte{})
 	return &nbioConn{
 		id:     uuid.New().String(),

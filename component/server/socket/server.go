@@ -23,7 +23,7 @@ func NewServer(handler Handler, opts ...options.Option) Server {
 	m.opt = opt
 	m.buckets = make([]*Bucket, opt.BucketSize)
 	for i := uint32(0); i < opt.BucketSize; i++ {
-		m.buckets[i] = newBucket(opt.ChannelSize, opt.RoutineAmount, opt.RoutineSize)
+		m.buckets[i] = newBucket(opt.ChannelSize, opt.RoomSize, opt.RoutineAmount, opt.RoutineSize)
 	}
 	m.servers = make(map[string]network.Server)
 	return m

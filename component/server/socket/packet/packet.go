@@ -14,6 +14,6 @@ type IPacket interface {
 	PackTo(w io.Writer) (err error)
 }
 
-type IFactory interface {
-	Offer(connId string) (p IPacket)
+type IParser interface {
+	Parse(connId string, reader io.Reader) (IPacket, error)
 }

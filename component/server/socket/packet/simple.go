@@ -89,16 +89,14 @@ func (p *SimplePacket) PackTo(w io.Writer) (err error) {
 	return
 }
 
-type DefaultFactory struct {
-	newFunc func() IPacket
+type DefaultParser struct {
 }
 
-func (factory *DefaultFactory) Offer(connId string) (p IPacket) {
-	return factory.newFunc()
-}
-
-func DefaultPacketFactory() IFactory {
-	return &DefaultFactory{newFunc: func() IPacket {
-		return &SimplePacket{}
-	}}
+func (p *DefaultParser) Parse(connId string, reader io.Reader) (packet IPacket, err error) {
+	packet = NewSimplePacket(nil)
+	err = packet.UnPackFrom(reader)
+	if err != nil {
+		return
+	}
+	return
 }

@@ -16,13 +16,13 @@ type nbioServer struct {
 	id        string
 	cfg       *tcp.Config
 	endpoint  *url.URL
-	parser    *packet.Parser
+	parser    packet.IParser
 	handler   network.Handler
 	eng       *nbio.Engine
 	startOnce *sync.Once
 }
 
-func NewServer(cfg *tcp.Config, parser *packet.Parser) network.Server {
+func NewServer(cfg *tcp.Config, parser packet.IParser) network.Server {
 	logging.SetLogger(&logger{})
 	g := nbio.NewEngine(nbio.Config{
 		Network:            "tcp",

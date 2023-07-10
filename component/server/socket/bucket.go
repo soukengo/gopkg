@@ -22,10 +22,11 @@ type Bucket struct {
 	routinesNum uint64
 }
 
-func newBucket(channelSize uint32, routineAmount uint64, routineSize int) *Bucket {
+func newBucket(channelSize uint32, roomSize uint32, routineAmount uint64, routineSize int) *Bucket {
 	b := &Bucket{
 		id:            uuid.New().String(),
 		chs:           make(map[string]Channel, channelSize),
+		rooms:         make(map[string]Room, roomSize),
 		routineAmount: routineAmount,
 		routineSize:   routineSize,
 	}
