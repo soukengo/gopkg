@@ -24,7 +24,7 @@ func (q *redisDelayed) Start() (err error) {
 	if err != nil {
 		return
 	}
-	err = q.producer.Stop()
+	err = q.producer.Start()
 	return
 }
 func (q *redisDelayed) Stop() (err error) {

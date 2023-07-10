@@ -61,14 +61,18 @@ func (c *sortedSetCache[T]) Scan(ctx context.Context, parts core.KeyParts, curso
 			return
 		}
 	}
-	ret = make([]*T, len(values))
+	ret = make([]*T, 0)
 	for i, v := range values {
+		// 第二个是分数(value score value score ...)
+		if i%2 == 1 {
+			continue
+		}
 		var item *T
 		item, err = c.decodeStr(v)
 		if err != nil {
 			return
 		}
-		ret[i] = item
+		ret = append(ret, item)
 	}
 	return
 }
@@ -152,9 +156,10 @@ func (c *sortedSetCache[T]) ExistsMember(ctx context.Context, parts core.KeyPart
 				err = core.ErrNoCache
 				return
 			}
-			return
 		}
+		return
 	}
+	isMember = true
 	return
 }
 
