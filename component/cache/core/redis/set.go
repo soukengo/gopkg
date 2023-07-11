@@ -24,6 +24,10 @@ func (c *setCache[T]) Add(ctx context.Context, parts core.KeyParts, v *T) (err e
 		return
 	}
 	_, err = c.cli.SAdd(ctx, c.key(parts), data)
+	if err != nil {
+		return
+	}
+	c.setTTL(ctx, parts)
 	return
 }
 
@@ -38,6 +42,10 @@ func (c *setCache[T]) AddSlice(ctx context.Context, parts core.KeyParts, values 
 		records[i] = data
 	}
 	_, err = c.cli.SAdd(ctx, c.key(parts), records...)
+	if err != nil {
+		return
+	}
+	c.setTTL(ctx, parts)
 	return
 }
 

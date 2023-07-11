@@ -16,9 +16,7 @@ func SetLogger(l Logger) {
 	if ok {
 		global = p.logger
 	}
-	if c, ok := global.(*logger); ok {
-		log.SetLogger(&kratosLogger{logger: c.provider})
-	}
+	log.SetLogger(Kratos(global))
 }
 
 func Debug(args ...interface{}) {

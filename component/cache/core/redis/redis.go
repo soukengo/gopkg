@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/soukengo/gopkg/component/cache/core"
 	"github.com/soukengo/gopkg/infra/storage/redis"
+	"github.com/soukengo/gopkg/log"
 )
 
 const (
@@ -56,4 +57,15 @@ func (c *redisCache[T]) decode(data []byte) (ret *T, err error) {
 		return
 	}
 	return value, nil
+}
+
+func (c *redisCache[T]) setTTL(ctx context.Context, parts core.KeyParts) {
+	cacheKey := c.key(parts)
+	if c.opts.Expire() <= 0 {
+		return
+	}
+	_, err := c.cli.Expire(ctx, cacheKey, c.opts.Expire())
+	if err != nil {
+		log.WithContext(ctx).Errorf("expire cacheKey err: %v", err)
+	}
 }

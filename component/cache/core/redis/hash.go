@@ -25,6 +25,10 @@ func (c *hashCache[T]) Put(ctx context.Context, parts core.KeyParts, field strin
 		return
 	}
 	_, err = c.cli.HSet(ctx, c.key(parts), field, data)
+	if err != nil {
+		return
+	}
+	c.setTTL(ctx, parts)
 	return
 }
 
@@ -39,6 +43,10 @@ func (c *hashCache[T]) PutMap(ctx context.Context, parts core.KeyParts, hash map
 		records[k] = data
 	}
 	_, err = c.cli.HMSet(ctx, c.key(parts), records)
+	if err != nil {
+		return
+	}
+	c.setTTL(ctx, parts)
 	return
 }
 

@@ -23,25 +23,35 @@ func newSortedSetCache[T any](cli *redis.Client, category *core.Category, opts *
 }
 
 func (c *sortedSetCache[T]) Add(ctx context.Context, parts core.KeyParts, member *core.SortedMember[T]) (err error) {
+	cacheKey := c.key(parts)
 	data, err := c.encode(member.Value)
 	if err != nil {
 		return
 	}
-	_, err = c.cli.ZAdd(ctx, c.key(parts), &rds.Z{Score: float64(member.Score), Member: data})
+	_, err = c.cli.ZAdd(ctx, cacheKey, &rds.Z{Score: float64(member.Score), Member: data})
+	if err != nil {
+		return
+	}
+	c.setTTL(ctx, parts)
 	return
 }
 
 func (c *sortedSetCache[T]) AddSlice(ctx context.Context, parts core.KeyParts, values []*core.SortedMember[T]) (err error) {
-	var records = make([]any, 0)
+	cacheKey := c.key(parts)
+	var records = make([]*rds.Z, 0)
 	for i, v := range values {
 		var data []byte
 		data, err = c.encode(v)
 		if err != nil {
 			return
 		}
-		records[i] = data
+		records[i] = &rds.Z{Score: float64(v.Score), Member: data}
 	}
-	_, err = c.cli.SAdd(ctx, c.key(parts), records...)
+	_, err = c.cli.ZAdd(ctx, cacheKey, records...)
+	if err != nil {
+		return
+	}
+	c.setTTL(ctx, parts)
 	return
 }
 
