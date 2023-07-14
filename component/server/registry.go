@@ -7,12 +7,12 @@ import (
 )
 
 type HttpServerRegistry interface {
-	Register(*http.Server)
+	RegisterHttp(*http.Server)
 }
 
 type GrpcServerRegistry interface {
-	Register(*grpc.Server)
+	RegisterGrpc(*grpc.Server)
 }
 type JobServerRegistry interface {
-	Register(job.Server)
+	RegisterJob(job.Server)
 }

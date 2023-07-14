@@ -40,8 +40,6 @@ type Channel interface {
 	AddRoom(roomId string)
 	DelRoom(roomId string)
 	Rooms() []string
-	MarkAuthenticated()
-	Authenticated() bool
 	Attributes
 }
 
@@ -54,14 +52,6 @@ type Room interface {
 }
 
 type Attributes interface {
-	// SetAttr sets attributes
-	SetAttr(key string, value any)
-	// DelAttr delete an attribute
-	DelAttr(key string)
-	// Attr get an attribute
-	Attr(key string) (value any, ok bool)
-	// StringAttr get an string attribute
-	StringAttr(key string) (value string)
-	// Int64Attr get an int64 attribute
-	Int64Attr(key string) (value int64)
+	SetSession(obj any)
+	Session() any
 }

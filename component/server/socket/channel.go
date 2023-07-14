@@ -8,19 +8,17 @@ import (
 	"github.com/soukengo/gopkg/util/runtimes"
 	"net"
 	"sync"
-	"sync/atomic"
 )
 
 type channel struct {
-	clientIP      string
-	conn          network.Connection
-	done          *sync.Once
-	sendQueue     chan packet.IPacket
-	ctx           context.Context
-	cancel        context.CancelFunc
-	rooms         map[string]struct{}
-	glock         sync.RWMutex
-	authenticated int32
+	clientIP  string
+	conn      network.Connection
+	done      *sync.Once
+	sendQueue chan packet.IPacket
+	ctx       context.Context
+	cancel    context.CancelFunc
+	rooms     map[string]struct{}
+	rlock     sync.RWMutex
 	Attributes
 }
 
@@ -59,22 +57,22 @@ func (c *channel) Send(data packet.IPacket) error {
 }
 
 func (c *channel) AddRoom(roomId string) {
-	c.glock.Lock()
+	c.rlock.Lock()
 	c.rooms[roomId] = struct{}{}
-	c.glock.Unlock()
+	c.rlock.Unlock()
 }
 
 func (c *channel) DelRoom(roomId string) {
-	c.glock.Lock()
+	c.rlock.Lock()
 	delete(c.rooms, roomId)
-	c.glock.Unlock()
+	c.rlock.Unlock()
 }
 func (c *channel) Rooms() (ret []string) {
-	c.glock.RLock()
+	c.rlock.RLock()
 	for id := range c.rooms {
 		ret = append(ret, id)
 	}
-	c.glock.RUnlock()
+	c.rlock.RUnlock()
 	return
 }
 
@@ -84,14 +82,6 @@ func (c *channel) Close() (err error) {
 		err = c.conn.Close()
 	})
 	return
-}
-
-func (c *channel) MarkAuthenticated() {
-	atomic.StoreInt32(&c.authenticated, 1)
-}
-
-func (c *channel) Authenticated() bool {
-	return atomic.LoadInt32(&c.authenticated) > 0
 }
 
 // dispatch send packet to connection
