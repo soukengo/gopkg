@@ -3,10 +3,10 @@ package kafka
 type Config struct {
 	Brokers     []string
 	TopicPrefix string
+	Consumer    *ConsumerConfig
 }
 
 type ConsumerConfig struct {
-	Topics  []string
 	Workers int
 	GroupId string
 }

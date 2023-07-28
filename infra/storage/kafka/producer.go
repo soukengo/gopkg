@@ -29,15 +29,12 @@ func (c *Producer) Close() error {
 	return c.producer.Close()
 }
 
-func (c *Producer) Submit(ctx context.Context, topic string, values []Value) (err error) {
-	var messages = make([]*kafka.ProducerMessage, len(values))
-	for i, value := range values {
-		messages[i] = &kafka.ProducerMessage{
-			Key:   kafka.StringEncoder(uuid.New().String()),
-			Topic: c.cfg.TopicPrefix + topic,
-			Value: kafka.ByteEncoder(value),
-		}
+func (c *Producer) Send(ctx context.Context, topic string, values []byte) (err error) {
+	var message = &kafka.ProducerMessage{
+		Key:   kafka.StringEncoder(uuid.New().String()),
+		Topic: c.cfg.TopicPrefix + topic,
+		Value: kafka.ByteEncoder(values),
 	}
-	err = c.producer.SendMessages(messages)
+	_, _, err = c.producer.SendMessage(message)
 	return
 }

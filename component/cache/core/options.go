@@ -1,6 +1,9 @@
 package core
 
-import "time"
+import (
+	"github.com/soukengo/gopkg/util/codec"
+	"time"
+)
 
 const (
 	// default cache expiration time
@@ -14,7 +17,7 @@ type Option func(opts *Options)
 type Options struct {
 	expire      time.Duration
 	emptyExpire time.Duration
-	codec       Codec
+	codec       codec.Codec
 }
 
 func Apply(category *Category, opts ...Option) *Options {
@@ -29,7 +32,7 @@ func WithEmptyExpire(emptyExpire time.Duration) Option {
 	return func(o *Options) { o.emptyExpire = emptyExpire }
 }
 
-func WithCodec(codec Codec) Option {
+func WithCodec(codec codec.Codec) Option {
 	return func(o *Options) { o.codec = codec }
 }
 
@@ -42,7 +45,7 @@ func options(category *Category) *Options {
 }
 
 func defaultOptions() *Options {
-	return &Options{expire: defaultExpire, emptyExpire: emptyExpire, codec: NewJsonCodec()}
+	return &Options{expire: defaultExpire, emptyExpire: emptyExpire, codec: codec.JSON}
 }
 
 func (o *Options) Expire() time.Duration {
@@ -53,9 +56,9 @@ func (o *Options) EmptyExpire() time.Duration {
 	return o.emptyExpire
 }
 
-func (o *Options) Codec() Codec {
+func (o *Options) Codec() codec.Codec {
 	if o.codec == nil {
-		o.codec = NewJsonCodec()
+		o.codec = codec.NewJsonCodec()
 	}
 	return o.codec
 }

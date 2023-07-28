@@ -21,6 +21,7 @@ require (
 	github.com/lesismal/nbio v1.3.10
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/nacos-group/nacos-sdk-go v1.1.4
+	github.com/panjf2000/ants/v2 v2.7.1
 	github.com/panjf2000/gnet/v2 v2.2.6
 	github.com/rs/xid v1.4.0
 	github.com/sony/sonyflake v1.1.0
