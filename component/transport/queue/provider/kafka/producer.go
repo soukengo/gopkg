@@ -25,7 +25,10 @@ func (c *kafkaProducer) Close() error {
 }
 
 func (c *kafkaProducer) Publish(ctx context.Context, message iface.Message, opts *options.ProducerOptions) (err error) {
-	value, err := iface.EncodeMessage(message, opts)
+	if opts == nil {
+		opts = options.Producer()
+	}
+	value, err := message.Encode(opts.Encoder())
 	if err != nil {
 		return
 	}

@@ -10,7 +10,7 @@ type kafkaQueue struct {
 	iface.Producer
 }
 
-func NewQueue(cfg *Config, logger log.Logger) (iface.Server, error) {
+func NewServer(cfg *Config, logger log.Logger) (iface.Server, error) {
 	consumer, err := NewConsumer(cfg, logger)
 	if err != nil {
 		return nil, err

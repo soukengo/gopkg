@@ -20,20 +20,20 @@ func NewRedisDelayed(cfg *Config, logger log.Logger) iface.Delayed {
 	return ins
 }
 
-func (q *redisDelayed) Start() (err error) {
-	err = q.consumer.Start()
+func (q *redisDelayed) Start(ctx context.Context) (err error) {
+	err = q.consumer.Start(ctx)
 	if err != nil {
 		return
 	}
-	err = q.producer.Start()
+	err = q.producer.Start(ctx)
 	return
 }
-func (q *redisDelayed) Stop() (err error) {
-	err = q.consumer.Stop()
+func (q *redisDelayed) Stop(ctx context.Context) (err error) {
+	err = q.consumer.Stop(ctx)
 	if err != nil {
 		return
 	}
-	err = q.producer.Stop()
+	err = q.producer.Stop(ctx)
 	return
 }
 

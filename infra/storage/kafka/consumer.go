@@ -29,24 +29,17 @@ type consumer struct {
 	stopped  sync.Once
 	ctx      context.Context
 	cancel   context.CancelFunc
-	handlers map[string]HandlerFunc
+	topics   map[string][]HandlerFunc
 	mutex    sync.Mutex
 }
 
-type ConsumerSpec struct {
-	GroupId string
-	Topic   string
-	Workers int
-	Handler HandlerFunc
-}
-
-func NewConsumer(cfg *Config, logger log.Logger) (Consumer, error) {
+func NewConsumer(cfg *Config, consumerCfg *ConsumerConfig, logger log.Logger) (Consumer, error) {
 	kafkaConfig := sarama.NewConfig()
 	kafkaConfig.Consumer.Return.Errors = true
-	if cfg.Consumer.Workers <= 0 {
-		cfg.Consumer.Workers = defaultWorkers
+	if consumerCfg.Workers <= 0 {
+		consumerCfg.Workers = defaultWorkers
 	}
-	cg, err := sarama.NewConsumerGroup(cfg.Brokers, cfg.Consumer.GroupId, kafkaConfig)
+	cg, err := sarama.NewConsumerGroup(cfg.Brokers, consumerCfg.GroupId, kafkaConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +48,7 @@ func NewConsumer(cfg *Config, logger log.Logger) (Consumer, error) {
 		logger:   logger,
 		cfg:      cfg,
 		consumer: cg,
-		queue:    make(chan *Message, cfg.Consumer.Workers),
+		queue:    make(chan *Message, consumerCfg.Workers),
 		ctx:      ctx,
 		cancel:   cancel,
 	}
@@ -81,7 +74,9 @@ func (c *consumer) Stop() error {
 func (c *consumer) Subscribe(topic string, handler HandlerFunc) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	c.handlers[topic] = handler
+	handlers := c.topics[topic]
+	handlers = append(handlers, handler)
+	c.topics[topic] = handlers
 }
 
 func (c *consumer) Ack(m *Message) {
@@ -97,19 +92,22 @@ func (c *consumer) dispatch() {
 		// 移除配置的topic前缀
 		topic := strings.TrimPrefix(msg.originTopic, c.cfg.TopicPrefix)
 		msg.topic = topic
-		handler, ok := c.handlers[topic]
+		handlers, ok := c.topics[topic]
 		if !ok {
 			c.Ack(msg)
 			return
 		}
-		handler(msg)
+		for _, item := range handlers {
+			var handler = item
+			handler(msg)
+		}
 	})
 }
 
 // receive 接收数据
 func (c *consumer) receive() {
 	topics := make([]string, 0)
-	for topic := range c.handlers {
+	for topic := range c.topics {
 		topics = append(topics, c.cfg.TopicPrefix+topic)
 	}
 	for {

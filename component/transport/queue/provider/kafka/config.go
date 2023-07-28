@@ -6,9 +6,5 @@ import (
 
 type Config struct {
 	kafka.Reference `mapstructure:",squash"`
-}
-
-type ConsumerConfig struct {
-	Workers int
-	GroupId string
+	Consumer        *kafka.ConsumerConfig
 }

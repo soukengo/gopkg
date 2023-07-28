@@ -40,7 +40,10 @@ func (q *Queue) Subscribe(topic iface.Topic, handler *iface.Handler) {
 }
 
 func (q *Queue) Publish(ctx context.Context, message iface.Message, opts *options.ProducerOptions) (err error) {
-	value, err := iface.EncodeMessage(message, opts)
+	if opts != nil {
+		opts = options.Producer()
+	}
+	value, err := message.Encode(opts.Encoder())
 	if err != nil {
 		return
 	}
@@ -48,14 +51,14 @@ func (q *Queue) Publish(ctx context.Context, message iface.Message, opts *option
 	return
 }
 
-func (q *Queue) Start() (err error) {
+func (q *Queue) Start(context.Context) (err error) {
 	q.started.Do(func() {
 		runtimes.Async(q.dispatch)
 	})
 	return nil
 }
 
-func (q *Queue) Stop() error {
+func (q *Queue) Stop(context.Context) error {
 	q.cancel()
 	return nil
 }
@@ -74,14 +77,10 @@ func (q *Queue) dispatch() {
 }
 
 func (q *Queue) trigger(message *iface.BytesMessage, handlers []*iface.Handler) {
-	ctx := context.TODO()
-	for _, h := range handlers {
-		if h.Options.Mode() == options.Async {
-			runtimes.Async(func() {
-				_ = h.Func(ctx, message)
-			})
-		} else {
-			_ = h.Func(ctx, message)
-		}
+	for _, item := range handlers {
+		var handler = item
+		handler.Process(message, func(action iface.Action) {
+			// do nothing
+		})
 	}
 }

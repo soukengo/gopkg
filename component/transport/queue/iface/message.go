@@ -1,8 +1,11 @@
 package iface
 
+import "github.com/soukengo/gopkg/util/codec"
+
 type Message interface {
 	Topic() Topic
 	Data() any
+	Encode(encoder codec.Encoder) ([]byte, error)
 }
 
 type RawMessage struct {
@@ -22,6 +25,10 @@ func (m *RawMessage) Data() any {
 	return m.data
 }
 
+func (m *RawMessage) Encode(encoder codec.Encoder) ([]byte, error) {
+	return encoder.Encode(m.data)
+}
+
 type BytesMessage struct {
 	topic Topic
 	data  []byte
@@ -37,6 +44,10 @@ func (m *BytesMessage) Topic() Topic {
 
 func (m *BytesMessage) Data() any {
 	return m.data
+}
+
+func (m *BytesMessage) Encode(encoder codec.Encoder) ([]byte, error) {
+	return m.data, nil
 }
 
 func (m *BytesMessage) Bytes() []byte {

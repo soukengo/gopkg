@@ -1,24 +1,28 @@
 package transport
 
-import "context"
+import (
+	"github.com/go-kratos/kratos/v2/transport"
+)
 
-type Server interface {
-	Start(context.Context) error
-	Stop(context.Context) error
-}
+type Server = transport.Server
 
 type ServerGroup interface {
 	Register(Server)
+	Servers() []Server
 }
 
 type group struct {
 	list []Server
 }
 
-func NewGroup(list ...Server) ServerGroup {
+func NewServerGroup(list ...Server) ServerGroup {
 	return &group{list: list}
 }
 
 func (g *group) Register(server Server) {
 	g.list = append(g.list, server)
+}
+
+func (g *group) Servers() []Server {
+	return g.list
 }

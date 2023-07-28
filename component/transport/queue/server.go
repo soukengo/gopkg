@@ -16,43 +16,25 @@ var (
 	ErrInvalidConfig = errors.New("invalid queue configuration")
 )
 
-func NewProducer(cfg *GeneralConfig, logger log.Logger) (Producer, error) {
-	if cfg.Redis != nil {
-		return redis.NewProducer(cfg.Redis, logger), nil
-	}
-	if cfg.Kafka != nil {
-		return kafka.NewProducer(cfg.Kafka, logger)
-	}
-
-	return nil, ErrInvalidConfig
-}
-
-func NewConsumer(cfg *Config, logger log.Logger) (Consumer, error) {
+func NewServer(cfg *Config, logger log.Logger) (Server, error) {
 	if cfg.General != nil {
-		return NewGeneralConsumer(cfg.General, logger)
+		return NewGeneralServer(cfg.General, logger)
 	}
-	return NewDelayedConsumer(cfg.Delayed, logger)
+	return NewDelayServer(cfg.Delayed, logger)
 }
 
-func NewGeneralConsumer(cfg *GeneralConfig, logger log.Logger) (Consumer, error) {
+func NewGeneralServer(cfg *GeneralConfig, logger log.Logger) (Server, error) {
 	if cfg.Redis != nil {
-		return redis.NewConsumer(cfg.Redis, logger), nil
+		return redis.NewServer(cfg.Redis, logger), nil
 	}
 	if cfg.Kafka != nil {
-		return kafka.NewConsumer(cfg.Kafka, logger)
+		return kafka.NewServer(cfg.Kafka, logger)
 	}
 	return nil, ErrInvalidConfig
 }
-func NewDelayedConsumer(cfg *DelayedConfig, logger log.Logger) (Consumer, error) {
+func NewDelayServer(cfg *DelayedConfig, logger log.Logger) (Server, error) {
 	if cfg.Redis != nil {
-		return redis.NewConsumer(cfg.Redis, logger), nil
-	}
-	return nil, ErrInvalidConfig
-}
-
-func NewDelayProducer(cfg *DelayedConfig, logger log.Logger) (DelayedProducer, error) {
-	if cfg.Redis != nil {
-		return redis.NewDelayProducer(cfg.Redis, logger), nil
+		return redis.NewRedisDelayed(cfg.Redis, logger), nil
 	}
 	return nil, ErrInvalidConfig
 }

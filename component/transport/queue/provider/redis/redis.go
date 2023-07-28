@@ -15,13 +15,13 @@ const (
 	keyDelayLockPrefix = keyPrefix + "delay.lock."
 )
 
-type redisQueue struct {
+type Queue struct {
 	iface.Consumer
 	iface.Producer
 }
 
-func NewRedisQueue(cfg *Config, logger log.Logger) iface.Server {
-	return &redisQueue{
+func NewServer(cfg *Config, logger log.Logger) iface.Server {
+	return &Queue{
 		Consumer: NewConsumer(cfg, logger),
 		Producer: NewProducer(cfg, logger),
 	}

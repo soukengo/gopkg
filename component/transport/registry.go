@@ -14,5 +14,5 @@ type GrpcServerRegistry interface {
 	RegisterGrpc(*grpc.Server)
 }
 type QueueServerRegistry interface {
-	RegisterJob(queue.Server)
+	RegisterQueue(queue.Server)
 }

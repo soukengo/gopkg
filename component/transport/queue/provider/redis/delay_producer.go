@@ -42,7 +42,7 @@ func NewDelayProducer(cfg *Config, logger log.Logger) iface.DelayedProducer {
 	return ins
 }
 
-func (q *redisDelayProducer) Start() (err error) {
+func (q *redisDelayProducer) Start(context.Context) (err error) {
 	q.startOnce.Do(func() {
 		for _, t := range q.topics {
 			t.runQueue()
@@ -50,7 +50,7 @@ func (q *redisDelayProducer) Start() (err error) {
 	})
 	return
 }
-func (q *redisDelayProducer) Stop() (err error) {
+func (q *redisDelayProducer) Stop(context.Context) (err error) {
 	q.stopOnce.Do(func() {
 		q.cancel()
 	})

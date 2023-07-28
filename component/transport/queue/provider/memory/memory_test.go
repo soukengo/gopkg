@@ -20,12 +20,12 @@ func TestMemory(t *testing.T) {
 
 	q := NewQueue(10)
 
-	q.Subscribe(eventGroupJoined, iface.WrapHandlerWithOptions(func(ctx context.Context, g *GroupJoinedEvent) error {
+	q.Subscribe(eventGroupJoined, iface.HandleWithOptions(func(ctx context.Context, g *GroupJoinedEvent) iface.Action {
 		t.Logf("OnGroupJoinedEvent: %v", g.GroupId)
-		return nil
+		return iface.None
 	}, options.Consumer().SetMode(options.Async)))
-	q.Start()
 	ctx := context.TODO()
+	q.Start(ctx)
 	q.Publish(ctx, iface.NewRawMessage(eventGroupJoined, &GroupJoinedEvent{
 		GroupId: "10001",
 	}), nil)
