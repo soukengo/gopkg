@@ -21,6 +21,12 @@ type server struct {
 }
 
 func NewServer(cfg *Config, logger log.Logger) iface.Server {
+	if cfg == nil {
+		cfg = &Config{}
+	}
+	if cfg.Size <= 0 {
+		cfg.Size = defaultSize
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	return &server{
 		cfg:    cfg,
