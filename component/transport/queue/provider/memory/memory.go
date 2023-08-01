@@ -4,12 +4,14 @@ import (
 	"context"
 	"github.com/soukengo/gopkg/component/transport/queue/iface"
 	"github.com/soukengo/gopkg/component/transport/queue/options"
+	"github.com/soukengo/gopkg/log"
 	"github.com/soukengo/gopkg/util/dispatcher"
 	"github.com/soukengo/gopkg/util/runtimes"
 	"sync"
 )
 
-type Queue struct {
+type server struct {
+	cfg     *Config
 	events  map[iface.Topic][]*iface.Handler
 	lock    sync.RWMutex
 	values  chan *iface.BytesMessage
@@ -18,17 +20,18 @@ type Queue struct {
 	started sync.Once
 }
 
-func NewQueue(queueSize uint) *Queue {
+func NewServer(cfg *Config, logger log.Logger) iface.Server {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &Queue{
+	return &server{
+		cfg:    cfg,
 		events: make(map[iface.Topic][]*iface.Handler),
-		values: make(chan *iface.BytesMessage, queueSize),
+		values: make(chan *iface.BytesMessage, cfg.Size),
 		ctx:    ctx,
 		cancel: cancel,
 	}
 }
 
-func (q *Queue) Subscribe(topic iface.Topic, handler *iface.Handler) {
+func (q *server) Subscribe(topic iface.Topic, handler *iface.Handler) {
 	q.lock.Lock()
 	listeners, ok := q.events[topic]
 	if !ok {
@@ -39,8 +42,8 @@ func (q *Queue) Subscribe(topic iface.Topic, handler *iface.Handler) {
 	q.lock.Unlock()
 }
 
-func (q *Queue) Publish(ctx context.Context, message iface.Message, opts *options.ProducerOptions) (err error) {
-	if opts != nil {
+func (q *server) Publish(ctx context.Context, message iface.Message, opts *options.ProducerOptions) (err error) {
+	if opts == nil {
 		opts = options.Producer()
 	}
 	value, err := message.Encode(opts.Encoder())
@@ -51,19 +54,19 @@ func (q *Queue) Publish(ctx context.Context, message iface.Message, opts *option
 	return
 }
 
-func (q *Queue) Start(context.Context) (err error) {
+func (q *server) Start(context.Context) (err error) {
 	q.started.Do(func() {
 		runtimes.Async(q.dispatch)
 	})
 	return nil
 }
 
-func (q *Queue) Stop(context.Context) error {
+func (q *server) Stop(context.Context) error {
 	q.cancel()
 	return nil
 }
 
-func (q *Queue) dispatch() {
+func (q *server) dispatch() {
 	dispatcher.Dispatch(q.ctx, q.values, func(msg *iface.BytesMessage) {
 		topic := msg.Topic()
 		q.lock.RLock()
@@ -76,7 +79,7 @@ func (q *Queue) dispatch() {
 	})
 }
 
-func (q *Queue) trigger(message *iface.BytesMessage, handlers []*iface.Handler) {
+func (q *server) trigger(message *iface.BytesMessage, handlers []*iface.Handler) {
 	for _, item := range handlers {
 		var handler = item
 		handler.Process(message, func(action iface.Action) {

@@ -22,7 +22,7 @@ func TestMemory(t *testing.T) {
 
 	q.Subscribe(eventGroupJoined, iface.HandleWithOptions(func(ctx context.Context, g *GroupJoinedEvent) iface.Action {
 		t.Logf("OnGroupJoinedEvent: %v", g.GroupId)
-		return iface.None
+		return iface.CommitMessage
 	}, options.Consumer().SetMode(options.Async)))
 	ctx := context.TODO()
 	q.Start(ctx)

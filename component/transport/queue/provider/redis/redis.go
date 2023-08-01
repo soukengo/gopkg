@@ -10,9 +10,10 @@ const (
 	delayIdleTime      = time.Millisecond * 100
 	delayConsumerBatch = 20
 	defaultWorkers     = 1
-	keyPrefix          = "iface."
-	keyDelayPrefix     = keyPrefix + "delay.wait."
-	keyDelayLockPrefix = keyPrefix + "delay.lock."
+	keyPrefix          = "queue"
+	separator          = "."
+	keyDelayPrefix     = keyPrefix + separator + "delay.wait"
+	keyDelayLockPrefix = keyPrefix + separator + "delay.lock"
 )
 
 type Queue struct {

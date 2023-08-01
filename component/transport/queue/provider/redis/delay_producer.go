@@ -15,6 +15,7 @@ import (
 
 type redisDelayProducer struct {
 	iface.Producer
+	cfg       *Config
 	cli       *redis.Client
 	topics    map[string]*delayItem
 	ctx       context.Context
@@ -23,10 +24,11 @@ type redisDelayProducer struct {
 	stopOnce  *sync.Once
 }
 
-func NewDelayProducer(cfg *Config, logger log.Logger) iface.DelayedProducer {
+func NewDelayProducer(cfg *Config, topics []iface.Topic, logger log.Logger) iface.DelayedProducer {
 	cli := redis.NewClient(cfg.Config, logger)
 	ctx, cancel := context.WithCancel(context.Background())
 	ins := &redisDelayProducer{
+		cfg:       cfg,
 		cli:       cli,
 		Producer:  NewProducer(cfg, logger),
 		ctx:       ctx,
@@ -35,7 +37,7 @@ func NewDelayProducer(cfg *Config, logger log.Logger) iface.DelayedProducer {
 		stopOnce:  new(sync.Once),
 	}
 	items := make(map[string]*delayItem)
-	for _, topic := range cfg.Consumer.Topics {
+	for _, topic := range topics {
 		items[string(topic)] = newDelayItem(ins, topic)
 	}
 	ins.topics = items
@@ -58,12 +60,15 @@ func (q *redisDelayProducer) Stop(context.Context) (err error) {
 }
 
 func (q *redisDelayProducer) PublishDelay(ctx context.Context, message iface.Message, opts *options.DelayedProducerOptions) (err error) {
-	value, err := opts.Encoder().Encode(message)
+	if opts == nil {
+		opts = options.Delayed()
+	}
+	value, err := message.Encode(opts.Encoder())
 	if err != nil {
 		return
 	}
 	waitKey := delayKey(message.Topic())
-	score := time.Now().UnixMilli() + opts.Delay()
+	score := time.Now().Add(opts.Delay()).UnixMilli()
 	members := []*redisdriver.Z{{Score: float64(score), Member: string(value)}}
 	if opts.Overwritten() {
 		_, err = q.cli.ZAdd(ctx, waitKey, members...)
@@ -74,6 +79,9 @@ func (q *redisDelayProducer) PublishDelay(ctx context.Context, message iface.Mes
 }
 
 func (q *redisDelayProducer) RemoveDelay(ctx context.Context, message iface.Message, opts *options.DelayedProducerRemoveOptions) (deleted bool, err error) {
+	if opts == nil {
+		opts = options.DelayedRemove()
+	}
 	value, err := opts.Encoder().Encode(message)
 	if err != nil {
 		return

@@ -32,7 +32,7 @@ func HandleWithOptions[T any](fn func(context.Context, *T) Action, opts *options
 			var req = new(T)
 			err := opts.Decoder().Decode(m.Bytes(), req)
 			if err != nil {
-				return None
+				return ReconsumeLater
 			}
 			return fn(ctx, req)
 		},

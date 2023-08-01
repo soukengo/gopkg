@@ -12,10 +12,10 @@ type redisDelayed struct {
 	producer iface.DelayedProducer
 }
 
-func NewRedisDelayed(cfg *Config, logger log.Logger) iface.Delayed {
+func NewRedisDelayed(cfg *Config, topics []iface.Topic, logger log.Logger) iface.Delayed {
 	ins := &redisDelayed{
 		consumer: NewConsumer(cfg, logger),
-		producer: NewDelayProducer(cfg, logger),
+		producer: NewDelayProducer(cfg, topics, logger),
 	}
 	return ins
 }

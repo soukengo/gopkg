@@ -20,7 +20,10 @@ func NewProducer(cfg *Config, logger log.Logger) iface.Producer {
 }
 
 func (q *producer) Publish(ctx context.Context, message iface.Message, opts *options.ProducerOptions) (err error) {
-	value, err := iface.EncodeMessage(message, opts)
+	if opts == nil {
+		opts = options.Producer()
+	}
+	value, err := message.Encode(opts.Encoder())
 	if err != nil {
 		return
 	}

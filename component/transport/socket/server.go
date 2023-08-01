@@ -14,8 +14,8 @@ type server struct {
 	opt     *options.Options
 }
 
-func NewServer(handler Handler, opts ...options.Option) Server {
-	m := &server{handler: handler}
+func NewServer(opts ...options.Option) Server {
+	m := &server{handler: &defaultHandler{}}
 	// set options
 	opt := options.Default()
 	opt.ParseOptions(opts...)

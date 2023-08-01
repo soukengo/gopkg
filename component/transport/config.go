@@ -1,18 +1,10 @@
 package transport
 
 import (
-	"github.com/soukengo/gopkg/component/transport/queue"
 	"github.com/soukengo/gopkg/component/transport/socket/network/tcp"
 	"github.com/soukengo/gopkg/component/transport/socket/network/ws"
 	"time"
 )
-
-type Config struct {
-	Http   *Http
-	Grpc   *Grpc
-	Socket *Socket
-	Queue  *queue.Config
-}
 
 type Http struct {
 	Network string

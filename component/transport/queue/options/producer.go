@@ -1,6 +1,9 @@
 package options
 
-import "github.com/soukengo/gopkg/util/codec"
+import (
+	"github.com/soukengo/gopkg/util/codec"
+	"time"
+)
 
 type ProducerOptions struct {
 	encoder codec.Encoder
@@ -21,11 +24,16 @@ func (o *ProducerOptions) SetEncoder(encoder codec.Encoder) *ProducerOptions {
 
 type DelayedProducerOptions struct {
 	ProducerOptions
-	delay       int64
+	delay       time.Duration
 	overwritten bool
 }
 
-func (o *DelayedProducerOptions) Delay() int64 {
+func Delayed() *DelayedProducerOptions {
+	producer := Producer()
+	return &DelayedProducerOptions{ProducerOptions: *producer}
+}
+
+func (o *DelayedProducerOptions) Delay() time.Duration {
 	return o.delay
 }
 
@@ -33,7 +41,7 @@ func (o *DelayedProducerOptions) Overwritten() bool {
 	return o.overwritten
 }
 
-func (o *DelayedProducerOptions) SetDelay(delay int64) *DelayedProducerOptions {
+func (o *DelayedProducerOptions) SetDelay(delay time.Duration) *DelayedProducerOptions {
 	o.delay = delay
 	return o
 }
@@ -45,4 +53,9 @@ func (o *DelayedProducerOptions) SetOverwritten(overwritten bool) *DelayedProduc
 
 type DelayedProducerRemoveOptions struct {
 	ProducerOptions
+}
+
+func DelayedRemove() *DelayedProducerRemoveOptions {
+	producer := Producer()
+	return &DelayedProducerRemoveOptions{ProducerOptions: *producer}
 }

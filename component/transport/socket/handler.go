@@ -4,8 +4,27 @@ import (
 	"context"
 	"github.com/soukengo/gopkg/component/transport/socket/network"
 	"github.com/soukengo/gopkg/component/transport/socket/packet"
+	"github.com/soukengo/gopkg/log"
 )
 
+type defaultHandler struct {
+}
+
+func (h *defaultHandler) OnCreated(ctx *Context) {
+	log.WithContext(ctx).Info("OnClosed", log.Pairs{"channelId": ctx.Channel().Id()})
+}
+
+func (h *defaultHandler) OnClosed(ctx *Context) {
+	log.WithContext(ctx).Info("OnClosed", log.Pairs{"channelId": ctx.Channel().Id()})
+}
+
+func (h *defaultHandler) OnReceived(ctx *Context, packet packet.IPacket) {
+	log.WithContext(ctx).Info("OnReceived", log.Pairs{"channelId": ctx.Channel().Id(), "packet": packet})
+}
+
+func (s *server) SetHandler(handler Handler) {
+	s.handler = handler
+}
 func (s *server) OnConnect(conn network.Connection) {
 	ch := newChannel(conn, s.opt.SendQueueSize)
 	s.Bucket(conn.Id()).PutChannel(ch)

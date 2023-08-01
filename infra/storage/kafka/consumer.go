@@ -49,6 +49,7 @@ func NewConsumer(cfg *Config, consumerCfg *ConsumerConfig, logger log.Logger) (C
 		cfg:      cfg,
 		consumer: cg,
 		queue:    make(chan *Message, consumerCfg.Workers),
+		topics:   make(map[string][]HandlerFunc),
 		ctx:      ctx,
 		cancel:   cancel,
 	}
@@ -112,7 +113,7 @@ func (c *consumer) receive() {
 	}
 	for {
 		if err := c.consumer.Consume(c.ctx, topics, c); err != nil {
-			c.logger.Helper().Errorf("Error from consumer: %v", err)
+			c.logger.Helper().Error("Error from consumer", log.Pairs{"topics": topics, "err": err})
 			time.Sleep(time.Second)
 		}
 		// check if context was cancelled, signaling that the consumer should stop
