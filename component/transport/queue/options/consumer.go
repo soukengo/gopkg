@@ -12,6 +12,9 @@ func Consumer() *ConsumerOptions {
 }
 
 func (o *ConsumerOptions) Decoder() codec.Decoder {
+	if o.decoder == nil {
+		o.decoder = codec.JSON
+	}
 	return o.decoder
 }
 

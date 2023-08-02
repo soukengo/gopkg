@@ -14,6 +14,9 @@ func Producer() *ProducerOptions {
 }
 
 func (o *ProducerOptions) Encoder() codec.Encoder {
+	if o.encoder == nil {
+		o.encoder = codec.JSON
+	}
 	return o.encoder
 }
 
