@@ -26,7 +26,13 @@ func newLeveledLogger(lv Level, cfg *LoggerConfig) (Provider, error) {
 		}
 		levelName := strings.ToLower(level.String())
 		fileName := strings.Join([]string{dir, levelName, sourceName}, string(filepath.Separator))
-		ac := &AppenderConfig{Pattern: cfg.Appender.Pattern, FileName: fileName, RotationCount: cfg.Appender.RotationCount}
+		ac := &AppenderConfig{
+			FileName:   fileName,
+			MaxSize:    cfg.Appender.MaxSize,
+			MaxAge:     cfg.Appender.MaxAge,
+			MaxBackups: cfg.Appender.MaxBackups,
+			Compress:   cfg.Appender.Compress,
+		}
 		leveled[level] = newAdapter(level, ac)
 	}
 	return &leveledProvider{leveled: leveled}, nil
